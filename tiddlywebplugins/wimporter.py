@@ -103,16 +103,20 @@ def _process_choices(environ, start_response, form):
                 'you may not write to that bag')
 
     tiddler_titles = form.getlist('tiddler')
-    for title in tiddler_titles:
+    if tiddler_titles:
+      for title in tiddler_titles:
         tiddler = Tiddler(title.decode('utf-8', 'ignore'), tmp_bag)
         tiddler = store.get(tiddler)
         tiddler.bag = bag.name
         store.put(tiddler)
-    tmp_bag = Bag(tmp_bag)
-    store.delete(tmp_bag)
+    else:
+      for tiddler in store.list_bag_tiddlers(Bag(tmp_bag)):
+        tiddler.bag = bag.name
+        store.put(tiddler)
+    store.delete(Bag(tmp_bag))
     bagurl = bag_url(environ, bag) + '/tiddlers'
     raise HTTP302(bagurl)
-
+    
 
 def _show_chooser(environ, tmp_bag, fixed_bag):
     # refresh the bag object
